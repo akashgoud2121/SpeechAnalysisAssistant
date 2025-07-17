@@ -2,18 +2,20 @@
 const nextConfig = {
   reactStrictMode: true,
   experimental: {
-    serverActions: true,
+    serverActions: {
+      bodySizeLimit: '2mb',
+      allowedOrigins: ['*']
+    }
   },
-  // Disable the Next.js loading indicator
-  devIndicators: {
-    buildActivityPosition: 'bottom-right',
-    buildActivity: true,
-  },
-  // Add output configuration for better static optimization
-  output: 'standalone',
-  // Add environment variables that should be exposed to the browser
-  env: {
-    NEXT_PUBLIC_GEMINI_API_KEY: process.env.GEMINI_API_KEY,
+  // Remove deprecated options
+  webpack: (config) => {
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      fs: false,
+      net: false,
+      tls: false,
+    };
+    return config;
   }
 }
 
