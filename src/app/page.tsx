@@ -18,13 +18,56 @@ import jsPDF from 'jspdf';
 import { ThemeToggle } from '@/components/theme-toggle';
 
 
+// Define interfaces for speech recognition
+interface SpeechRecognitionResult {
+  readonly isFinal: boolean;
+  readonly [index: number]: SpeechRecognitionAlternative;
+}
+
+interface SpeechRecognitionAlternative {
+  readonly transcript: string;
+  readonly confidence: number;
+}
+
+interface SpeechRecognitionResultList {
+  readonly length: number;
+  item(index: number): SpeechRecognitionResult;
+  [index: number]: SpeechRecognitionResult;
+}
+
+interface SpeechRecognitionEvent extends Event {
+  readonly resultIndex: number;
+  readonly results: SpeechRecognitionResultList;
+}
+
+interface SpeechRecognitionErrorEvent extends Event {
+  readonly error: string;
+  readonly message: string;
+}
+
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  start(): void;
+  stop(): void;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
+  onend: (() => void) | null;
+}
+
 // For TS compatibility with browser SpeechRecognition API
 declare global {
   interface Window {
-    SpeechRecognition: typeof SpeechRecognition;
-    webkitSpeechRecognition: typeof SpeechRecognition;
+    SpeechRecognition: {
+      new(): SpeechRecognition;
+    };
+    webkitSpeechRecognition: {
+      new(): SpeechRecognition;
+    };
   }
 }
+
 
 const Step = ({ number, title, children }: { number: number, title: string, children: React.ReactNode }) => (
     <div className="flex items-start gap-4">
@@ -69,7 +112,7 @@ export default function Home() {
         recognition.interimResults = true;
         recognition.lang = 'en-US';
 
-        recognition.onresult = (event) => {
+        recognition.onresult = (event: SpeechRecognitionEvent) => {
             let final_transcript = '';
             for (let i = event.resultIndex; i < event.results.length; ++i) {
                 if (event.results[i].isFinal) {
@@ -81,7 +124,7 @@ export default function Home() {
             }
         };
 
-        recognition.onerror = (event) => {
+        recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
             if (event.error === 'network' || event.error === 'no-speech' || event.error === 'audio-capture') {
                 return;
             }
@@ -571,8 +614,8 @@ export default function Home() {
                             <Label 
                                 htmlFor="r1" 
                                 className={cn(
-                                    "flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer",
-                                    analysisMode === 'presentation' && "bg-primary text-primary-foreground border-primary"
+                                    "flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer peer-data-[state=checked]:border-primary",
+                                    analysisMode === 'presentation' && "bg-primary text-primary-foreground"
                                 )}
                             >
                                 <Presentation className="mb-3 h-6 w-6" />
@@ -584,8 +627,8 @@ export default function Home() {
                              <Label 
                                 htmlFor="r2" 
                                 className={cn(
-                                    "flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer",
-                                    analysisMode === 'interview' && "bg-primary text-primary-foreground border-primary"
+                                    "flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer peer-data-[state=checked]:border-primary",
+                                    analysisMode === 'interview' && "bg-primary text-primary-foreground"
                                 )}
                             >
                                 <MessageSquareQuote className="mb-3 h-6 w-6" />
@@ -597,8 +640,8 @@ export default function Home() {
                              <Label 
                                 htmlFor="r3" 
                                 className={cn(
-                                    "flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer",
-                                    analysisMode === 'practice' && "bg-primary text-primary-foreground border-primary"
+                                    "flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer peer-data-[state=checked]:border-primary",
+                                    analysisMode === 'practice' && "bg-primary text-primary-foreground"
                                 )}
                             >
                                 <ClipboardCheck className="mb-3 h-6 w-6" />
@@ -795,3 +838,8 @@ export default function Home() {
     </div>
   );
 }
+
+type AnalysisMode = 'interview' | 'presentation' | 'practice';
+type InputMode = 'live' | 'audio' | 'upload';
+
+  

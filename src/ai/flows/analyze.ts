@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -9,10 +10,10 @@
  */
 
 import {ai} from '@/ai/genkit';
-import { AnalyzeInput, AnalyzeSpeechOutputSchema, AnalyzeInputSchema } from './schemas';
+import { AnalyzeInput, AnalyzeSpeechOutput, AnalyzeSpeechOutputSchema, AnalyzeInputSchema } from './schemas';
 
 
-export async function analyze(input: AnalyzeInput): Promise<any> {
+export async function analyze(input: AnalyzeInput): Promise<AnalyzeSpeechOutput> {
   return analysisFlow(input);
 }
 
@@ -63,7 +64,7 @@ const analysisFlow = ai.defineFlow(
     inputSchema: AnalyzeInputSchema,
     outputSchema: AnalyzeSpeechOutputSchema,
   },
-  async (input) => {
+  async (input): Promise<AnalyzeSpeechOutput> => {
 
     const promptData = {
       ...input,
@@ -72,7 +73,10 @@ const analysisFlow = ai.defineFlow(
       isPractice: input.mode === 'practice',
     };
     
-    const promptParts: (string | {media: {url: string}} | {text: string})[] = [systemPrompt];
+    const promptParts: (
+      | { media: { url: string } }
+      | { text: string }
+    )[] = [];
     
     if (input.audioDataUri) {
       promptParts.push({ media: { url: input.audioDataUri } });
@@ -83,13 +87,23 @@ const analysisFlow = ai.defineFlow(
 
     const llmResponse = await ai.generate({
         prompt: promptParts,
-        input: promptData,
         model: 'googleai/gemini-1.5-flash',
+        system: systemPrompt,
         output: {
             schema: AnalyzeSpeechOutputSchema,
         },
+        config: {
+          template: {
+            input: promptData
+          },
+          templateFormat: 'handlebars'
+        }
     });
     
-    return llmResponse.output;
+    const output = llmResponse.output;
+    if (!output) {
+      throw new Error("Analysis failed: no output from model.");
+    }
+    return output;
   }
 );
