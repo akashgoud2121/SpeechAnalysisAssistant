@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack --port 9002",
+    "dev": "next dev --port 9002",
     "genkit:dev": "genkit start -- tsx src/ai/dev.ts",
     "genkit:watch": "genkit start -- tsx --watch src/ai/dev.ts",
     "build": "next build",
@@ -12,11 +12,12 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@opentelemetry/exporter-jaeger": "^1.21.0",
     "@genkit-ai/firebase": "^1.13.0",
     "@genkit-ai/googleai": "^1.13.0",
     "@genkit-ai/next": "^1.13.0",
     "@hookform/resolvers": "^5.1.1",
+    "@opentelemetry/exporter-jaeger": "^1.21.0",
+    "@opentelemetry/winston-transport": "^0.14.0",
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-alert-dialog": "^1.1.14",
     "@radix-ui/react-avatar": "^1.1.10",
@@ -48,10 +49,9 @@
     "html2canvas": "^1.4.1",
     "jspdf": "^2.5.1",
     "lucide-react": "^0.525.0",
-    "next": "15.3.3",
+    "next": "14.1.0",
     "patch-package": "^8.0.0",
     "react": "^18.2.0",
-    "react-day-picker": "^9.8.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.60.0",
     "recharts": "^3.1.0",
@@ -67,10 +67,10 @@
     "@types/react-dom": "^18.2.0",
     "@types/wav": "^1.0.4",
     "autoprefixer": "^10.4.16",
-    "postcss": "^8.4.32",
     "eslint": "^8.56.0",
     "eslint-config-next": "14.0.4",
     "genkit-cli": "^1.14.1",
+    "postcss": "^8.4.32",
     "tailwindcss": "^3.4.0",
     "typescript": "^5"
   }
