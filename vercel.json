@@ -3,10 +3,6 @@
   "buildCommand": "npm run build",
   "devCommand": "npm run dev",
   "framework": "nextjs",
-  "regions": ["fra1"],
-  "env": {
-    "GEMINI_API_KEY": "@gemini-api-key",
-    "GOOGLE_API_KEY": "@google-api-key",
-    "NODE_ENV": "production"
-  }
+  "regions": ["fra1"]
+  
 }
