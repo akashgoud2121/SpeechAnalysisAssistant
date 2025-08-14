@@ -1,4 +1,3 @@
-
 'use server';
 
 /**
@@ -9,9 +8,8 @@
  * - AnalyzeSpeechOutput - The return type for the analyze function.
  */
 
-import {ai} from '@/ai/genkit';
+import { ai } from '@/ai/genkit';
 import { AnalyzeInput, AnalyzeSpeechOutput, AnalyzeSpeechOutputSchema, AnalyzeInputSchema } from './schemas';
-
 
 export async function analyze(input: AnalyzeInput): Promise<AnalyzeSpeechOutput> {
   return analysisFlow(input);
@@ -85,6 +83,7 @@ const analysisFlow = ai.defineFlow(
       promptParts.push({text: `Transcription: "${input.transcription}"`});
     }
 
+    // Remove the invalid fields 'template' and 'templateFormat' from the request
     const llmResponse = await ai.generate({
         prompt: promptParts,
         model: 'googleai/gemini-1.5-flash',
@@ -93,10 +92,8 @@ const analysisFlow = ai.defineFlow(
             schema: AnalyzeSpeechOutputSchema,
         },
         config: {
-          template: {
-            input: promptData
-          },
-          templateFormat: 'handlebars'
+          // Directly pass the prompt data, without using 'template' or 'templateFormat'
+          input: promptData
         }
     });
     
