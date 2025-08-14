@@ -15,7 +15,16 @@ export async function analyze(input: AnalyzeInput): Promise<AnalyzeSpeechOutput>
   return analysisFlow(input);
 }
 
-const systemPrompt = `You are a professional speech coach and exam evaluator. 
+const analysisFlow = ai.defineFlow(
+  {
+    name: 'analysisFlow',
+    inputSchema: AnalyzeInputSchema,
+    outputSchema: AnalyzeSpeechOutputSchema,
+  },
+  async (input): Promise<AnalyzeSpeechOutput> => {
+    
+    // Build the system prompt dynamically based on the mode
+    let systemPrompt = `You are a professional speech coach and exam evaluator. 
 You will conduct a comprehensive analysis of a user's speech and return a single JSON object with your findings.
 
 The user's speech is provided as either audio or a transcription. If audio is provided, you must transcribe it first. Once you have the transcription, perform your full analysis based on that text.
@@ -39,37 +48,27 @@ In addition to the evaluations, you must provide the following metadata:
 
 The user has specified an analysis mode. Use this mode to tailor your feedback.
 
-{{#if isInterview}}
-You are in "Interview Mode". The user was answering the question: "{{{question}}}"
-All evaluations should be in the context of this question.
-{{/if}}
-{{#if isPresentation}}
-You are in "Presentation Mode". The speech should be evaluated as a general presentation.
-{{/if}}
-{{#if isPractice}}
-You are in "Practice Mode". The user was answering the question: "{{{question}}}"
-Their goal is to match the following "perfect answer" as closely as possible in content and meaning.
-Perfect Answer: "{{{perfectAnswer}}}"
-All content-related evaluations (Relevance, Organization, Accuracy, Depth, Persuasiveness) must be based on how well the user's answer compares to this perfect answer. You must score them on how closely they match the provided perfect answer.
-{{/if}}
-
-Now, analyze the following input and provide your complete analysis as a single JSON object.
 `;
 
-const analysisFlow = ai.defineFlow(
-  {
-    name: 'analysisFlow',
-    inputSchema: AnalyzeInputSchema,
-    outputSchema: AnalyzeSpeechOutputSchema,
-  },
-  async (input): Promise<AnalyzeSpeechOutput> => {
+    // Add mode-specific instructions
+    if (input.mode === 'interview') {
+      systemPrompt += `You are in "Interview Mode". The user was answering the question: "${input.question}"
+All evaluations should be in the context of this question.
+`;
+    } else if (input.mode === 'presentation') {
+      systemPrompt += `You are in "Presentation Mode". The speech should be evaluated as a general presentation.
+`;
+    } else if (input.mode === 'practice') {
+      systemPrompt += `You are in "Practice Mode". The user was answering the question: "${input.question}"
+Their goal is to match the following "perfect answer" as closely as possible in content and meaning.
+Perfect Answer: "${input.perfectAnswer}"
+All content-related evaluations (Relevance, Organization, Accuracy, Depth, Persuasiveness) must be based on how well the user's answer compares to this perfect answer. You must score them on how closely they match the provided perfect answer.
+`;
+    }
 
-    const promptData = {
-      ...input,
-      isInterview: input.mode === 'interview',
-      isPresentation: input.mode === 'presentation',
-      isPractice: input.mode === 'practice',
-    };
+    systemPrompt += `
+
+Now, analyze the following input and provide your complete analysis as a single JSON object.`;
     
     const promptParts: (
       | { media: { url: string } }
@@ -83,17 +82,13 @@ const analysisFlow = ai.defineFlow(
       promptParts.push({text: `Transcription: "${input.transcription}"`});
     }
 
-    // Remove the invalid fields 'template' and 'templateFormat' from the request
+    // Remove the config object entirely
     const llmResponse = await ai.generate({
         prompt: promptParts,
         model: 'googleai/gemini-1.5-flash',
         system: systemPrompt,
         output: {
             schema: AnalyzeSpeechOutputSchema,
-        },
-        config: {
-          // Directly pass the prompt data, without using 'template' or 'templateFormat'
-          input: promptData
         }
     });
     
