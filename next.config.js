@@ -1,6 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-
   /* config options here */
   typescript: {
     ignoreBuildErrors: false,  // It's better to resolve TypeScript errors
@@ -14,15 +13,6 @@ const nextConfig = {
         pathname: '/**',
       },
     ],
-
-  reactStrictMode: true,
-  webpack(config) {
-    config.module.rules.push({
-      test: /\.css$/,
-      use: ['style-loader', 'css-loader', 'postcss-loader'],
-    });
-    return config;
->>>>>>> 337e95e4fe440fc6f994dd46af18b47fc9494e50
   },
   // Enable React Strict Mode for better development experience
   reactStrictMode: true,
